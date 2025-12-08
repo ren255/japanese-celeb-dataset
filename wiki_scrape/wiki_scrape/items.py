@@ -6,7 +6,6 @@
 import scrapy
 
 
-class WikiScrapeItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class WikiSubCategoryItem(scrapy.Item):
+    title = scrapy.Field()
+    pageid = scrapy.Field()
