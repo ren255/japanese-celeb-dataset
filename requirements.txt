@@ -2,3 +2,4 @@ requests
 ja_ginza
 scrapy
 mwclient
+pandas

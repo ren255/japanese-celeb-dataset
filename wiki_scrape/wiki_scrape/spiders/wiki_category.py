@@ -26,7 +26,7 @@ class WikiCategorySpider(scrapy.Spider):
         yield scrapy.Request(
             url=f"{url}?{'&'.join([f'{k}={v}' for k, v in params.items()])}",
             callback=self.parse,
-            meta={"depth": 0, "parent_id": self.page_id},
+            meta={"depth": 1, "parent_id": self.page_id},
         )
 
     def parse(self, response):
