@@ -9,9 +9,9 @@ from itemadapter import ItemAdapter
 from scrapy.exporters import CsvItemExporter
 
 
-class WikiScrapePipeline:
+class ItemProcess:
     def process_item(self, item, spider):
-        return item
+        return item.process(item)
 
 
 class CsvExportPipeline:

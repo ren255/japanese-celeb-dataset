@@ -59,7 +59,7 @@ DOWNLOAD_DELAY = 1
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    # "wiki_scrape.pipelines.WikiScrapePipeline": 300,
+    "wiki_scrape.pipelines.ItemProcess": 800,
     "wiki_scrape.pipelines.CsvExportPipeline": 900,
 }
 

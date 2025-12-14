@@ -1,38 +1,47 @@
 import scrapy
 import json
+from urllib.parse import urlencode
 from ..items import WikiSubCategoryItem
 
 
 class WikiCategorySpider(scrapy.Spider):
     name = "wiki_sub_category"
 
-    def __init__(self, page_id=None, *args, **kwargs):
-        super(WikiCategorySpider, self).__init__(*args, **kwargs)
-        self.page_id = page_id
+    # ベースパラメータを定義
+    base_params = {
+        "action": "query",
+        "list": "categorymembers",
+        "format": "json",
+        "cmlimit": 500,
+        "cmtype": "subcat",
+    }
+
+    base_url = "https://ja.wikipedia.org/w/api.php"
 
     def start_requests(self):
-        if not self.page_id:
-            raise ValueError("page_id is required")
-
-        url = "https://ja.wikipedia.org/w/api.php"
-        params = {
-            "action": "query",
-            "list": "categorymembers",
-            "cmpageid": self.page_id,
-            "format": "json",
-            "cmlimit": 500,
-            "cmtype": "subcat",
-        }
+        # 女性カテゴリ (Category:職業別の日本の女性: 3248378)
+        params = {**self.base_params, "cmpageid": 3248378}
+        url = f"{self.base_url}?{urlencode(params)}"
         yield scrapy.Request(
-            url=f"{url}?{'&'.join([f'{k}={v}' for k, v in params.items()])}",
+            url=url,
             callback=self.parse,
-            meta={"depth": 1, "parent_id": self.page_id},
+            meta={"depth": 1, "parent_id": 3248378, "sex": "female"},
+        )
+
+        # 男性カテゴリ (Category:職業別の日本の男性: 4051488)
+        params = {**self.base_params, "cmpageid": 4051488}
+        url = f"{self.base_url}?{urlencode(params)}"
+        yield scrapy.Request(
+            url=url,
+            callback=self.parse,
+            meta={"depth": 1, "parent_id": 4051488, "sex": "male"},
         )
 
     def parse(self, response):
         data = json.loads(response.text)
         depth = response.meta["depth"]
         parent_id = response.meta["parent_id"]
+        sex = response.meta["sex"]
 
         for page in data["query"]["categorymembers"]:
             yield WikiSubCategoryItem(
@@ -40,19 +49,14 @@ class WikiCategorySpider(scrapy.Spider):
                 pageid=page["pageid"],
                 depth=depth,
                 parent=parent_id,
+                sex=sex,
             )
 
-            url = "https://ja.wikipedia.org/w/api.php"
-            params = {
-                "action": "query",
-                "list": "categorymembers",
-                "cmpageid": page["pageid"],
-                "format": "json",
-                "cmlimit": 500,
-                "cmtype": "subcat",
-            }
+            # 再帰的にサブカテゴリを取得
+            params = {**self.base_params, "cmpageid": page["pageid"]}
+            url = f"{self.base_url}?{urlencode(params)}"
             yield scrapy.Request(
-                url=f"{url}?{'&'.join([f'{k}={v}' for k, v in params.items()])}",
+                url=url,
                 callback=self.parse,
-                meta={"depth": depth + 1, "parent_id": page["pageid"]},
+                meta={"depth": depth + 1, "parent_id": page["pageid"], "sex": sex},
             )
