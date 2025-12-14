@@ -9,3 +9,5 @@ import scrapy
 class WikiSubCategoryItem(scrapy.Item):
     title = scrapy.Field()
     pageid = scrapy.Field()
+    depth = scrapy.Field()
+    parent = scrapy.Field()
