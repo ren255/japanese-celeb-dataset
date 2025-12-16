@@ -148,6 +148,10 @@ class WikiSubCategoryItem(scrapy.Item):
         return item
 
 
+import re
+from scrapy.exceptions import DropItem
+
+
 class WikiPageItem(scrapy.Item):
     title = scrapy.Field()
     pageid = scrapy.Field()
@@ -162,16 +166,33 @@ class WikiPageItem(scrapy.Item):
     def process(self, item):
         item["drop"] = False
 
+        # title に英字が含まれていたら除外
+        if re.search(r"[A-Za-z]", item["title"]):
+            item["drop"] = True
+            raise DropItem("title contains english")
+
+        # 日本語 + 許可記号 以外が含まれていたら除外
+        if re.search(r"[^一-龯ぁ-ゖァ-ヺー\s(),]", item["title"]):
+            item["drop"] = True
+            raise DropItem("title contains non-japanese characters")
+
         # 名前がひらがな=漢字でない除外
         if len(item["sortkeyprefix"]) == 0:
             item["drop"] = True
+            raise DropItem("no sortkeyprefix = title is hiragana?")
 
-        item["sortkeyprefix"] = re.sub(r"\s", " ", item["sortkeyprefix"])
-        if not all(char in self.hiragana for char in item["sortkeyprefix"]):
+        # 空白正規化
+        item["sortkeyprefix"] = re.sub(r"\s+", " ", item["sortkeyprefix"])
+        # ひらがな＋スペース以外が含まれていたら除外
+        if re.search(r"[^ぁ-ゖ ]", item["sortkeyprefix"]):
             item["drop"] = True
+            raise DropItem("sortkeyprefix contains non hiragana")
 
         # sortkeyprefixがよみになるため、氏名分割できないものを除外
         if len(item["sortkeyprefix"].split(" ")) != 2:
             item["drop"] = True
+            # 人名だが分割されていないものがあるためpass
+
+        item["title"] = re.sub(r"・", " ", item["title"])
 
         return item

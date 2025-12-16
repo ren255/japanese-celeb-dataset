@@ -21,6 +21,7 @@ class WikiCategoryPageSpider(scrapy.Spider):
 
     def start_requests(self):
         sub_categorys = pd.read_csv("data/wiki_sub_category.csv")
+        sub_categorys = sub_categorys[sub_categorys["drop"] == False]
 
         for _, row in sub_categorys.iterrows():
             params = {**self.base_params, "cmpageid": row["pageid"]}
