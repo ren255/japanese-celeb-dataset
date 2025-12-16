@@ -22,7 +22,7 @@ ADDONS = {}
 ROBOTSTXT_OBEY = False
 
 # Concurrency and throttling settings
-# CONCURRENT_REQUESTS = 16
+CONCURRENT_REQUESTS = 16
 CONCURRENT_REQUESTS_PER_DOMAIN = 1
 DOWNLOAD_DELAY = 1
 
@@ -86,3 +86,10 @@ HTTPCACHE_STORAGE = "scrapy.extensions.httpcache.FilesystemCacheStorage"
 
 # Set settings whose default value is deprecated to a future-proof value
 FEED_EXPORT_ENCODING = "utf-8"
+
+
+LOG_ENABLED = True
+LOG_LEVEL = "INFO"
+LOG_FILE = "log/scrapy.log"  # ログファイル名（Noneならコンソール）
+LOG_FILE_APPEND = False  # Trueなら追記、Falseなら上書き
+LOG_ENCODING = "utf-8"

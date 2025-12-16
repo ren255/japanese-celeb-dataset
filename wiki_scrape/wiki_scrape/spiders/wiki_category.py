@@ -14,6 +14,7 @@ class WikiCategorySpider(scrapy.Spider):
         "format": "json",
         "cmlimit": 500,
         "cmtype": "subcat",
+        "cmprop": "ids|title|sortkeyprefix",
     }
 
     base_url = "https://ja.wikipedia.org/w/api.php"
@@ -44,12 +45,14 @@ class WikiCategorySpider(scrapy.Spider):
         sex = response.meta["sex"]
 
         for page in data["query"]["categorymembers"]:
+            sortkey_prefix = page.get("sortkeyprefix", "")
             yield WikiSubCategoryItem(
                 title=page["title"],
                 pageid=page["pageid"],
                 depth=depth,
-                parent=parent_id,
+                parent_id=parent_id,
                 sex=sex,
+                sortkeyprefix=sortkey_prefix,
             )
 
             # 再帰的にサブカテゴリを取得
