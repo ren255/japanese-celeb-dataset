@@ -6,6 +6,7 @@
 import scrapy
 from scrapy.exceptions import DropItem
 import re
+import datetime
 
 
 class WikiSubCategoryItem(scrapy.Item):
@@ -160,9 +161,6 @@ class WikiPageItem(scrapy.Item):
     sex = scrapy.Field()
     drop = scrapy.Field()
 
-    hiragana = [chr(i) for i in range(0x3041, 0x3097)]
-    hiragana.append(" ")
-
     def process(self, item):
         item["drop"] = False
 
@@ -196,3 +194,165 @@ class WikiPageItem(scrapy.Item):
         item["title"] = re.sub(r"・", " ", item["title"])
 
         return item
+
+
+import ast
+
+
+class WikiPersonItem(scrapy.Item):
+    title = scrapy.Field()
+    kanji = scrapy.Field()
+    hiragana = scrapy.Field()
+    pageid = scrapy.Field()
+    extract = scrapy.Field()
+    infobox = scrapy.Field()
+    sex = scrapy.Field()
+    drop = scrapy.Field()
+    birth_year = scrapy.Field()
+    birth_date = scrapy.Field()
+
+    # ===== 正規化 infobox fields =====
+    birth_date = scrapy.Field()
+    birth_place = scrapy.Field()
+    nationality = scrapy.Field()
+    blood_type = scrapy.Field()
+    height = scrapy.Field()
+    weight = scrapy.Field()
+    education = scrapy.Field()
+    occupation = scrapy.Field()
+
+    INFOBOX_KEY_MAP: dict[str, list[str]] = {
+        # ===== 基本 =====
+        # "name": ["name", "名前", "氏名", "fullname", "本名", "birth_name", "出生名"],
+        # "ruby": ["ふりがな", "ruby"],
+        "birth_date": [
+            "born",
+            "birth_date",
+            "出生",
+            "生年月日",
+            "誕生日",
+            "dateofbirth",
+            "birthdate",
+        ],
+        "birth_place": [
+            "birth_place",
+            "出生地",
+            "生誕地",
+            "出身地",
+            "cityofbirth",
+            "countryofbirth",
+            "origin",
+            "location",
+        ],
+        # ===== 属性 =====
+        "nationality": ["nationality", "国籍", "country"],
+        "blood_type": ["blood", "血液型"],
+        "height": ["height", "身長"],
+        "weight": ["weight", "体重"],
+        # ===== 学歴・経歴 =====
+        "education": [
+            "education",
+            "学歴",
+            "school_background",
+            "alma_mater",
+            "出身校",
+            "training",
+        ],
+        "occupation": ["occupation", "職業", "肩書き", "field", "role"],
+    }
+
+    def process(self, item):
+        item["drop"] = False
+
+        hiragana, year, date, bracket_content = self.extract_birth_date(item["extract"])
+        item["hiragana"] = hiragana
+        item["birth_year"] = year
+        item["birth_date"] = date
+        item["extract"] = -1
+
+        item = self.extract_infobox(item)
+        item["infobox"] = -1
+
+        kanji = item["title"]
+        kanji = re.sub(r"\(.*", "", kanji)  # (の前まで抽出
+        match = re.search(r"^([一-龯ぁ-んァ-ヶー]+)", kanji)
+        if match:
+            kanji = match.group(1)
+            item["kanji"] = kanji
+        if not item["kanji"]:
+            DropItem("title not japanese")
+
+        if not hiragana:
+            raise DropItem("no hiragana")
+        if len(hiragana.split(" ")) != 2:
+            raise DropItem("cannot split hiragana in 2")
+
+        return item
+
+    def extract_infobox(self, item):
+
+        infobox = item.get("infobox")
+        if not infobox:
+            # infobox が無い場合は全て None
+            for key in self.INFOBOX_KEY_MAP:
+                item[key] = None
+            return item
+
+        # 文字列で来た場合（"{'name': 'xxx', ...}"）
+        if isinstance(infobox, str):
+            try:
+                infobox = ast.literal_eval(infobox)
+            except Exception:
+                item["drop"] = True
+                return item
+
+        # 正規化
+        for normalized_key, candidates in self.INFOBOX_KEY_MAP.items():
+            value = None
+            for cand in candidates:
+                if cand in infobox:
+                    value = infobox[cand]
+                    break
+            item[normalized_key] = value
+        return item
+
+    def extract_birth_date(self, text):
+        bracket_match = re.search(r"（(.+)）", text)
+        if not bracket_match:
+            return None, None, None, None
+
+        # 括弧内の全体を取得
+        full_bracket_match = re.search(r"（(.+?)）", text)
+
+        if not full_bracket_match:
+            return None
+
+        bracket_content = full_bracket_match.group(1)
+
+        # 年・月・日を個別に抽出
+        hiragana_match = re.search(
+            r"^([ぁ-んァ-ヶー\s]+?)(?:、|,|$|\d)", bracket_content
+        )
+        # 先頭から"、",",","文字列の終端","数字"のいずれかまでのひらがな。
+        year_match = re.search(r"(\d{4})年", bracket_content)
+
+        month_match = re.search(r"(\d{1,2})月", bracket_content)
+        day_match = re.search(r"(\d{1,2})日", bracket_content)
+
+        # 結果を構築（見つからない要素はNone）
+        hiragana = hiragana_match.group(1) if hiragana_match else None
+
+        if year_match:
+            year = int(year_match.group(1))
+        else:
+            year = None
+
+        date = None
+        if year_match and month_match and day_match:
+            date = datetime.datetime(
+                year,
+                int(month_match.group(1)),
+                int(day_match.group(1)),
+            ).strftime("%Y-%m-%d")
+
+        return hiragana, year, date, bracket_content
