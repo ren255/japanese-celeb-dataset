@@ -221,6 +221,8 @@ class WikiPersonItem(scrapy.Item):
     education = scrapy.Field()
     occupation = scrapy.Field()
 
+    pageids = []
+
     INFOBOX_KEY_MAP: dict[str, list[str]] = {
         # ===== 基本 =====
         # "name": ["name", "名前", "氏名", "fullname", "本名", "birth_name", "出生名"],
@@ -264,6 +266,11 @@ class WikiPersonItem(scrapy.Item):
     def process(self, item):
         item["drop"] = False
 
+        if item["pageid"] in self.pageids:
+            raise DropItem("duplicate pageid")
+        else:
+            self.pageids.append(item["pageid"])
+
         hiragana, year, date, bracket_content = self.extract_birth_date(item["extract"])
         item["hiragana"] = hiragana
         item["birth_year"] = year
@@ -279,8 +286,9 @@ class WikiPersonItem(scrapy.Item):
         if match:
             kanji = match.group(1)
             item["kanji"] = kanji
-        if not item["kanji"]:
-            DropItem("title not japanese")
+
+        if not item.get("kanji"):
+            raise DropItem("title not japanese")
 
         if not hiragana:
             raise DropItem("no hiragana")

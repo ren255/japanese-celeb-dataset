@@ -59,9 +59,9 @@ class WikiCategoryPageSpider(scrapy.Spider):
             extract = page_data.get("extract", "")
             extract = re.sub(r"\s+", " ", extract).strip()
 
-            retry_count = response.meta.get("retry_count", 0)
+            retry = response.meta.get("retry", False)
 
-            if not extract and retry_count < 3:
+            if not extract and not retry:
                 # 単独でリトライ
                 params = {
                     **self.base_params,
@@ -74,7 +74,7 @@ class WikiCategoryPageSpider(scrapy.Spider):
                     callback=self.parse,
                     meta={
                         "sex_mapping": {int(pageid): sex},
-                        "retry_count": retry_count + 1,
+                        "retry": True,
                     },
                     dont_filter=True,
                 )
