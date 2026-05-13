@@ -26,14 +26,18 @@ def main():
     else:
         wiki_scrape_dir = Path(__file__).parent  # ローカル開発時
 
+    print("running wiki_sub_category")
     run_scrapy("wiki_sub_category", cwd=wiki_scrape_dir)
+    print("running wiki_category_page")
     run_scrapy("wiki_category_page", cwd=wiki_scrape_dir)
+    print("running person_page")
     run_scrapy("person_page", cwd=wiki_scrape_dir)
 
     from wiki_scrape import format as fmt
 
     output = args.output or str(Path.cwd() / "data.csv")
-    fmt.run(output_path=output)
+    print(f"running format {output=},{wiki_scrape_dir=}")
+    fmt.run(output_path=output, lib_path=wiki_scrape_dir)
 
 
 if __name__ == "__main__":

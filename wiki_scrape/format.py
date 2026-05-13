@@ -28,8 +28,8 @@ from namedivider import BasicNameDivider, GBDTNameDivider
 import argparse
 
 
-def run(output_path=None):
-    person = pd.read_csv("data/person_page.csv")
+def run(output_path=None, lib_path: Path = Path("./")):
+    person = pd.read_csv(lib_path / "data/person_page.csv")
 
     person = person[~person["sex"].isna()]
     person["len"] = person["kanji"].str.len()
