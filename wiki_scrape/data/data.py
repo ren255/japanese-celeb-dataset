@@ -3,14 +3,14 @@ import pandas as pd
 import plotly.graph_objects as go
 
 # Read CSV
-df = pd.read_csv("wiki_sub_category.csv")
+df = pd.read_csv("data/wiki_sub_category.csv")
 # wiki_scrape/data/wiki_sub_category.csv
 # Build tree structure
 nodes = {}
 for _, row in df.iterrows():
     nodes[row["pageid"]] = {
         "title": row["title"],
-        "parent": row["parent"],
+        "parent": row["parent_id"],
         "depth": row["depth"],
     }
 
@@ -77,7 +77,7 @@ fig.show()
 import pandas as pd
 
 # Read CSV
-df = pd.read_csv("wiki_sub_category.csv")
+df = pd.read_csv("data/wiki_sub_category.csv")
 
 # Ensure pageid and parent are integers (handle any NaN or string issues)
 df["pageid"] = pd.to_numeric(df["pageid"], errors="coerce").astype(
@@ -95,8 +95,8 @@ print(f"Duplicates removed: {len(df) - len(df_clean)}")
 print("Remaining pageid duplicates:", df_clean["pageid"].duplicated().sum())
 
 # Rewrite to same file (overwrites original)
-df_clean.to_csv("wiki_sub_category.csv", index=False)
-print("✅ Cleaned CSV saved: wiki_sub_category.csv")
+df_clean.to_csv("data/wiki_sub_category.csv", index=False)
+print("Cleaned CSV saved: wiki_sub_category.csv")
 
 
 from treelib import Tree
@@ -104,7 +104,7 @@ import csv
 
 tree = Tree()
 
-with open("wiki_sub_category.csv", "r", encoding="utf-8") as f:
+with open("data/wiki_sub_category.csv", "r", encoding="utf-8") as f:
     reader = csv.DictReader(f)
     for row in reader:
         if row["parent"] == "":  # ルートノード

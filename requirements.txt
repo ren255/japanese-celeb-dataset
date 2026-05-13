@@ -1,7 +1,0 @@
-requests
-ja_ginza
-scrapy
-mwclient
-pandas
-mwparserfromhell
-namedivider-python

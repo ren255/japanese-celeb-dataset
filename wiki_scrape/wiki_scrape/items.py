@@ -133,6 +133,7 @@ class WikiSubCategoryItem(scrapy.Item):
 
         if item["pageid"] in self.pageids:
             item["drop"] = True
+            raise DropItem("duplicate pageid")
 
         if not sex_in_title:
             item["sortkeyprefix"] = re.sub(r"\s", " ", item["sortkeyprefix"])
