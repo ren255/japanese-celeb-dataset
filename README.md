@@ -44,7 +44,6 @@ scrapy crawl person_page
 python format.py
 ```
 
----
 
 ## 確認・デバッグ用スクリプト
 
