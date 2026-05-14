@@ -8,7 +8,7 @@ import pandas as pd
 import mwparserfromhell
 from pathlib import Path
 from ..items import WikiPersonItem
-from wiki_scrape.scripts.auth import get_wiki_headers
+from ...scripts.auth import get_wiki_headers
 
 
 class WikiCategoryPageSpider(scrapy.Spider):

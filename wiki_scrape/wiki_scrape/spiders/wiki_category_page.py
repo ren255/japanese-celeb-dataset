@@ -5,6 +5,7 @@ from ..items import WikiPageItem
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
+from ...scripts.auth import get_wiki_headers
 
 
 class WikiCategoryPageSpider(scrapy.Spider):
@@ -20,6 +21,7 @@ class WikiCategoryPageSpider(scrapy.Spider):
     }
 
     base_url = "https://ja.wikipedia.org/w/api.php"
+    auth_headers = get_wiki_headers()
 
     custom_settings = {
         "DATA_DIR": "data",  # デフォルト
@@ -42,6 +44,7 @@ class WikiCategoryPageSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=url,
                 callback=self.parse,
+                headers=self.auth_headers,
                 meta={
                     "parent_id": row["pageid"],
                     "sex": row["sex"],
@@ -77,6 +80,7 @@ class WikiCategoryPageSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=url,
                 callback=self.parse,
+                headers=self.auth_headers,
                 meta={"parent_id": parent_id, "sex": sex},
             )
 

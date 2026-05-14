@@ -3,6 +3,7 @@ import json
 from urllib.parse import urlencode
 from ..items import WikiSubCategoryItem
 from pathlib import Path
+from ...scripts.auth import get_wiki_headers
 
 
 class WikiCategorySpider(scrapy.Spider):
@@ -19,6 +20,7 @@ class WikiCategorySpider(scrapy.Spider):
     }
 
     base_url = "https://ja.wikipedia.org/w/api.php"
+    auth_headers = get_wiki_headers()
 
     custom_settings = {
         "DATA_DIR": "data",  # デフォルト
@@ -32,6 +34,7 @@ class WikiCategorySpider(scrapy.Spider):
         yield scrapy.Request(
             url=url,
             callback=self.parse,
+            headers=self.auth_headers,
             meta={"depth": 1, "parent_id": 3248378, "sex": "female"},
         )
 
@@ -41,6 +44,7 @@ class WikiCategorySpider(scrapy.Spider):
         yield scrapy.Request(
             url=url,
             callback=self.parse,
+            headers=self.auth_headers,
             meta={"depth": 1, "parent_id": 4051488, "sex": "male"},
         )
 
@@ -66,6 +70,7 @@ class WikiCategorySpider(scrapy.Spider):
             url = f"{self.base_url}?{urlencode(params)}"
             yield scrapy.Request(
                 url=url,
+                headers=self.auth_headers,
                 callback=self.parse,
                 meta={"depth": depth + 1, "parent_id": page["pageid"], "sex": sex},
             )
