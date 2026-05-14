@@ -5,7 +5,7 @@ from ..items import WikiPageItem
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-from ...scripts.auth import get_wiki_headers
+from scripts.auth import get_wiki_headers
 
 
 class WikiCategoryPageSpider(scrapy.Spider):

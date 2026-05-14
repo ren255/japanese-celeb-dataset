@@ -36,9 +36,8 @@ def main():
     print("running person_page")
     run_scrapy("person_page", cwd=wiki_scrape_dir, data_path=output_dir)
 
-    output = output_dir / "data.csv" or str(Path.cwd() / "data.csv")
-    print(f"running format {output=},{wiki_scrape_dir=}")
-    fmt.run(output_path=output)
+    print(f"running format {output_dir=}")
+    fmt.run(output_path=output_dir)
 
 
 if __name__ == "__main__":

@@ -29,7 +29,9 @@ import argparse
 
 
 def run(output_path):
-    person = pd.read_csv(output_path / "person_page.csv")
+    input = output_path / "person_page.csv"
+    print(f"reading {input}")
+    person = pd.read_csv(input)
 
     person = person[~person["sex"].isna()]
     person["len"] = person["kanji"].str.len()
@@ -131,7 +133,7 @@ def run(output_path):
     )
     person["birth_year"] = person["birth_year"].astype("Int64")
 
-    output = Path(output_path) if output_path else Path(__file__).parent / "data.csv"
+    output = output_path / "data.csv"
     person.to_csv(output, index=False)
     print(f"出力完了: {output}")
 

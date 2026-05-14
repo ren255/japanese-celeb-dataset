@@ -3,7 +3,7 @@ import json
 from urllib.parse import urlencode
 from ..items import WikiSubCategoryItem
 from pathlib import Path
-from ...scripts.auth import get_wiki_headers
+from scripts.auth import get_wiki_headers
 
 
 class WikiCategorySpider(scrapy.Spider):
