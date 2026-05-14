@@ -15,16 +15,25 @@ NEWSPIDER_MODULE = "wiki_scrape.spiders"
 ADDONS = {}
 
 
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
-# USER_AGENT = "wiki_scrape (+http://www.yourdomain.com)"
+USER_AGENT = "NameCrawler/1.0 (+https://rentoda.com)"
 
-# Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
-# Concurrency and throttling settings
-CONCURRENT_REQUESTS = 64
-CONCURRENT_REQUESTS_PER_DOMAIN = 50
-DOWNLOAD_DELAY = 0
+# 200 req/min = 3.33 req/s に収める
+# 並列4 × delay0.3s = 約3.3 req/s
+CONCURRENT_REQUESTS = 4
+CONCURRENT_REQUESTS_PER_DOMAIN = 4
+
+DOWNLOAD_DELAY = 0.3
+
+AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_START_DELAY = 0.3
+AUTOTHROTTLE_MAX_DELAY = 10  # 429来たら最大10s待つ
+AUTOTHROTTLE_TARGET_CONCURRENCY = 2.0
+
+RETRY_HTTP_CODES = [429, 500, 502, 503, 504]
+RETRY_TIMES = 5
+
 
 # Disable cookies (enabled by default)
 # COOKIES_ENABLED = False

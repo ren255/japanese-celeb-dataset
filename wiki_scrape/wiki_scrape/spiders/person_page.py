@@ -1,47 +1,63 @@
 import scrapy
 import json
 import re
+import time
+from datetime import timedelta
 from urllib.parse import urlencode
 import pandas as pd
 import mwparserfromhell
-from ..items import WikiPersonItem
-from tqdm import tqdm
 from pathlib import Path
+from ..items import WikiPersonItem
+from wiki_scrape.scripts.auth import get_wiki_headers
 
 
 class WikiCategoryPageSpider(scrapy.Spider):
     name = "person_page"
-
     base_url = "https://ja.wikipedia.org/w/api.php"
-
     base_params = {
         "action": "query",
         "format": "json",
         "prop": "extracts|revisions|pageprops",
-        "exintro": True,  # 冒頭のみ
+        "exintro": True,
         "redirects": 1,
-        "explaintext": True,  # プレーンテキスト
-        "rvprop": "content",  # ウィキテキスト取得
+        "explaintext": True,
+        "rvprop": "content",
         "rvslots": "main",
     }
+
     custom_settings = {
-        "DATA_DIR": "data",  # デフォルト
+        "DATA_DIR": "data",
     }
 
-    def start_requests(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.auth_headers = get_wiki_headers()
+        self.processed = 0
+        self.total = 0
+        self.start_time = None
+        self.last_progress_print = 0
+        # 10分
+        self.progress_print_interval = 600
+
+    async def start(self):
+        self.start_time = time.time()
         self.data_path = Path(self.settings.get("DATA_DIR"))
         persons = pd.read_csv(self.data_path / "wiki_category_page.csv")
         drop_ctn = len(persons[persons["drop"]])
-        total = len(persons)
+        total_before_drop = len(persons)
         print(
-            f"processing {total} person pages from data/wiki_category_page.csv. {drop_ctn}({drop_ctn/total:.2f}%) pages has dropped"
+            f"[INFO] processing {total_before_drop} person pages "
+            f"from data/wiki_category_page.csv. "
+            f"{drop_ctn} ({drop_ctn/total_before_drop:.2%}) pages dropped"
         )
         persons = persons[~persons["drop"]]
-        total = len(persons)
-        self.pbar = tqdm(total=total, desc="Processing", unit="person")
-        self.processed = 0
+        self.total = len(persons)
+        print(f"[INFO] final target pages: {self.total}")
 
         batch_size = 50
+        total_batches = (self.total + batch_size - 1) // batch_size
+        print(f"[INFO] batch_size={batch_size}, " f"total_batches={total_batches}")
+
         for i in range(0, len(persons), batch_size):
             batch = persons.iloc[i : i + batch_size]
 
@@ -58,6 +74,7 @@ class WikiCategoryPageSpider(scrapy.Spider):
 
             yield scrapy.Request(
                 url=url,
+                headers=self.auth_headers,
                 callback=self.parse,
                 meta={"sex_mapping": sex_mapping},
             )
@@ -95,14 +112,38 @@ class WikiCategoryPageSpider(scrapy.Spider):
                 )
             else:
                 self.processed += 1
-                self.pbar.update(1)
                 if not extract:
-                    self.pbar.write(f"[WARN] pageid={pageid} extract empty after retry")
+                    print(f"[WARN] pageid={pageid} " f"extract empty after retry")
+                self.print_progress()
+
                 yield self.process_page(page_data, sex)
+
+    def print_progress(self):
+        now = time.time()
+        if now - self.last_progress_print < self.progress_print_interval:
+            return
+        self.last_progress_print = now
+        elapsed = now - self.start_time
+        if self.processed == 0:
+            return
+        overall_speed = self.processed / elapsed
+        remaining = self.total - self.processed
+        eta_seconds = remaining / overall_speed
+        eta_td = timedelta(seconds=int(eta_seconds))
+        elapsed_td = timedelta(seconds=int(elapsed))
+        percent = (self.processed / self.total) * 100
+
+        print(
+            f"[PROGRESS] "
+            f"{self.processed}/{self.total} "
+            f"({percent:.2f}%) | "
+            f"elapsed={elapsed_td} | "
+            f"speed={overall_speed:.2f} pages/sec | "
+            f"ETA={eta_td}"
+        )
 
     def process_page(self, page_data, sex):
         """人物ページ1件分の処理"""
-
         title = page_data.get("title")
         pageid = page_data.get("pageid")
 
@@ -162,9 +203,23 @@ class WikiCategoryPageSpider(scrapy.Spider):
 
                 if value:
                     infobox[key] = value
+
             break
 
         return infobox
 
     def closed(self, reason):
-        self.pbar.close()
+        elapsed = time.time() - self.start_time
+
+        elapsed_td = timedelta(seconds=int(elapsed))
+
+        print("=" * 80)
+        print("[FINISHED]")
+        print(f"reason={reason}")
+        print(f"processed={self.processed}/{self.total}")
+        print(f"elapsed={elapsed_td}")
+
+        if elapsed > 0:
+            print(f"average_speed=" f"{self.processed / elapsed:.2f} pages/sec")
+
+        print("=" * 80)

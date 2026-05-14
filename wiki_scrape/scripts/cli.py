@@ -38,7 +38,7 @@ def main():
 
     output = output_dir / "data.csv" or str(Path.cwd() / "data.csv")
     print(f"running format {output=},{wiki_scrape_dir=}")
-    fmt.run(output_path=output, lib_path=wiki_scrape_dir)
+    fmt.run(output_path=output)
 
 
 if __name__ == "__main__":

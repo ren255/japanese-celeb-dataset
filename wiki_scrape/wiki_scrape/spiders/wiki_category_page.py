@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from ..items import WikiPageItem
 import pandas as pd
 from pathlib import Path
+from tqdm import tqdm
 
 
 class WikiCategoryPageSpider(scrapy.Spider):
@@ -24,10 +25,16 @@ class WikiCategoryPageSpider(scrapy.Spider):
         "DATA_DIR": "data",  # デフォルト
     }
 
-    def start_requests(self):
+    async def start(self):
         self.data_path = Path(self.settings.get("DATA_DIR"))
+        print(f"reading {self.data_path / "wiki_sub_category.csv"}")
         sub_categorys = pd.read_csv(self.data_path / "wiki_sub_category.csv")
         sub_categorys = sub_categorys[sub_categorys["drop"] == False]
+        print(f"processing {len(sub_categorys)} sub category")
+        self.pbar = tqdm(
+            total=len(sub_categorys), desc="Processing", unit="subcategory"
+        )
+        self.processed = 0
 
         for _, row in sub_categorys.iterrows():
             params = {**self.base_params, "cmpageid": row["pageid"]}
@@ -49,7 +56,8 @@ class WikiCategoryPageSpider(scrapy.Spider):
         if "query" in data and "categorymembers" in data["query"]:
             for page in data["query"]["categorymembers"]:
                 sortkey_prefix = page.get("sortkeyprefix", "")
-
+                self.processed += 1
+                self.pbar.update(1)
                 yield WikiPageItem(
                     title=page["title"],
                     pageid=page["pageid"],
@@ -71,3 +79,6 @@ class WikiCategoryPageSpider(scrapy.Spider):
                 callback=self.parse,
                 meta={"parent_id": parent_id, "sex": sex},
             )
+
+    def closed(self, reason):
+        self.pbar.close()

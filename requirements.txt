@@ -1,3 +1,4 @@
 kagglehub
 ipykernel
 pathspec
+python-dotenv
