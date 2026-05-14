@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 import pandas as pd
 import mwparserfromhell
 from ..items import WikiPersonItem
+from tqdm import tqdm
 
 
 class WikiCategoryPageSpider(scrapy.Spider):
@@ -25,6 +26,15 @@ class WikiCategoryPageSpider(scrapy.Spider):
 
     def start_requests(self):
         persons = pd.read_csv("data/wiki_category_page.csv")
+        drop_ctn = len(persons[persons["drop"]])
+        total = len(persons)
+        print(
+            f"processing {total} person pages from data/wiki_category_page.csv. {drop_ctn}({drop_ctn/total:.2f}%) pages has dropped"
+        )
+        persons = persons[~persons["drop"]]
+        total = len(persons)
+        self.pbar = tqdm(total=total, desc="Processing", unit="person")
+        self.processed = 0
 
         batch_size = 50
         for i in range(0, len(persons), batch_size):
@@ -79,6 +89,10 @@ class WikiCategoryPageSpider(scrapy.Spider):
                     dont_filter=True,
                 )
             else:
+                self.processed += 1
+                self.pbar.update(1)
+                if not extract:
+                    self.pbar.write(f"[WARN] pageid={pageid} extract empty after retry")
                 yield self.process_page(page_data, sex)
 
     def process_page(self, page_data, sex):
@@ -146,3 +160,6 @@ class WikiCategoryPageSpider(scrapy.Spider):
             break
 
         return infobox
+
+    def closed(self, reason):
+        self.pbar.close()

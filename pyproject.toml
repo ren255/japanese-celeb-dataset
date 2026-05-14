@@ -17,6 +17,7 @@ dependencies = [
     "pandas",
     "mwparserfromhell",
     "namedivider-python",
+    "tqdm",
 ]
 
 [tool.setuptools.packages.find]
@@ -24,4 +25,4 @@ where = ["."]
 include = ["wiki_scrape*"]
 
 [project.scripts]
-wiki-scrape = "wiki_scrape.cli:main"
+wiki-scrape = "wiki_scrape.scripts.cli:main"
