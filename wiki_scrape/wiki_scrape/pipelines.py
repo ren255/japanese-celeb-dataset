@@ -16,7 +16,8 @@ class ItemProcess:
 
 class CsvExportPipeline:
     def open_spider(self, spider):
-        file_path = f"data/{spider.name}.csv"
+        data_dir = spider.settings.get("DATA_DIR")
+        file_path = f"{data_dir}/{spider.name}.csv"
         self.file = open(file_path, "wb")
         self.exporter = CsvItemExporter(self.file, encoding="utf-8-sig")
         self.exporter.start_exporting()

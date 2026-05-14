@@ -8,3 +8,4 @@ __pycache__/
 
 wiki_scrape/.scrapy
 kaggle_out
+data/

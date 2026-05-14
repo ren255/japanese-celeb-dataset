@@ -2,6 +2,7 @@ import scrapy
 import json
 from urllib.parse import urlencode
 from ..items import WikiSubCategoryItem
+from pathlib import Path
 
 
 class WikiCategorySpider(scrapy.Spider):
@@ -19,7 +20,12 @@ class WikiCategorySpider(scrapy.Spider):
 
     base_url = "https://ja.wikipedia.org/w/api.php"
 
+    custom_settings = {
+        "DATA_DIR": "data",  # デフォルト
+    }
+
     def start_requests(self):
+        self.data_path = Path(self.settings.get("DATA_DIR"))
         # 女性カテゴリ (Category:職業別の日本の女性: 3248378)
         params = {**self.base_params, "cmpageid": 3248378}
         url = f"{self.base_url}?{urlencode(params)}"

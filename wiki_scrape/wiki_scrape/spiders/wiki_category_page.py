@@ -3,6 +3,7 @@ import json
 from urllib.parse import urlencode
 from ..items import WikiPageItem
 import pandas as pd
+from pathlib import Path
 
 
 class WikiCategoryPageSpider(scrapy.Spider):
@@ -19,8 +20,13 @@ class WikiCategoryPageSpider(scrapy.Spider):
 
     base_url = "https://ja.wikipedia.org/w/api.php"
 
+    custom_settings = {
+        "DATA_DIR": "data",  # デフォルト
+    }
+
     def start_requests(self):
-        sub_categorys = pd.read_csv("data/wiki_sub_category.csv")
+        self.data_path = Path(self.settings.get("DATA_DIR"))
+        sub_categorys = pd.read_csv(self.data_path / "wiki_sub_category.csv")
         sub_categorys = sub_categorys[sub_categorys["drop"] == False]
 
         for _, row in sub_categorys.iterrows():

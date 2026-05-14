@@ -6,6 +6,7 @@ import pandas as pd
 import mwparserfromhell
 from ..items import WikiPersonItem
 from tqdm import tqdm
+from pathlib import Path
 
 
 class WikiCategoryPageSpider(scrapy.Spider):
@@ -23,9 +24,13 @@ class WikiCategoryPageSpider(scrapy.Spider):
         "rvprop": "content",  # ウィキテキスト取得
         "rvslots": "main",
     }
+    custom_settings = {
+        "DATA_DIR": "data",  # デフォルト
+    }
 
     def start_requests(self):
-        persons = pd.read_csv("data/wiki_category_page.csv")
+        self.data_path = Path(self.settings.get("DATA_DIR"))
+        persons = pd.read_csv(self.data_path / "wiki_category_page.csv")
         drop_ctn = len(persons[persons["drop"]])
         total = len(persons)
         print(
