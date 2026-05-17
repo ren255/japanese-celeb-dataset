@@ -1,5 +1,35 @@
 # Wikipedia Japanese Person Data Crawler
 
+## Quick Start
+kaggle dataset for easier use:
+[japanese-names-with-gender](https://www.kaggle.com/datasets/rentoda/japanese-names-with-gender) : 79k this wiki scraped dataset
+[japanese-names-with-gender-extended](https://www.kaggle.com/datasets/rentoda/japanese-names-with-gender-extended) : 930k dataset(5 source meta dataset)
+
+start with starter [notebook on kaggle](https://www.kaggle.com/code/rentoda/starter-japanese-names-with-gender-extended?scriptVersionId=320022647).
+or do locally:
+
+```sh
+pip install kagglehub[pandas-datasets]
+```
+
+```sh
+import kagglehub
+from kagglehub import KaggleDatasetAdapter
+
+# Set the path to the file you'd like to load
+file_path = ""
+
+df = kagglehub.load_dataset(
+  KaggleDatasetAdapter.PANDAS,
+  "rentoda/japanese-names-with-gender-extended",
+  file_path,
+)
+
+print("First 5 records:", df.head())
+```
+
+## Overview
+
 > Category:職業別の日本の女性 (pageid: 3248378)  
 > Category:職業別の日本の男性 (pageid: 4051488)
 
@@ -26,7 +56,7 @@ Wikipediaから「職業別の日本人（男女別）」カテゴリを起点�
 
 ---
 
-## Quick Start
+## Quick Start Run
 
 ### 1. 環境構築
 
