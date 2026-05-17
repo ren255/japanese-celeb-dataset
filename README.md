@@ -1,9 +1,10 @@
 # Wikipedia Japanese Person Data Crawler
+dataset available on kaggle  
+ [japanese-names-with-gender](https://www.kaggle.com/datasets/rentoda/japanese-names-with-gender) : this wiki scraped dataset(79k)
 
 ## Quick Start
 kaggle dataset for easier use:
-[japanese-names-with-gender](https://www.kaggle.com/datasets/rentoda/japanese-names-with-gender) : 79k this wiki scraped dataset
-[japanese-names-with-gender-extended](https://www.kaggle.com/datasets/rentoda/japanese-names-with-gender-extended) : 930k dataset(5 source meta dataset)
+[japanese-names-with-gender-extended](https://www.kaggle.com/datasets/rentoda/japanese-names-with-gender-extended) : 930k dataset(5 source meta dataset including this dataset)  
 
 start with starter [notebook on kaggle](https://www.kaggle.com/code/rentoda/starter-japanese-names-with-gender-extended?scriptVersionId=320022647).
 or do locally:
